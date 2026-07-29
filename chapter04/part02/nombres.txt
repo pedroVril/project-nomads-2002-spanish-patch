@@ -1,0 +1,4 @@
+﻿omu_c04p02_speaker01.bmp
+omu_c04p02_speaker02.bmp
+omu_c04p02_speaker03.bmp
+omu_c04p02_speaker04.bmp

@@ -1,0 +1,11 @@
+﻿omu_c04p05_frienda01.bmp
+omu_c04p05_frienda02.bmp
+omu_c04p05_friendb01.bmp
+omu_c04p05_friendb02.bmp
+omu_c04p05_friendb03.bmp
+omu_c04p05_friendb04.bmp
+omu_c04p05_friendb05.bmp
+omu_c04p05_friendb06.bmp
+omu_c04p05_speaker01.bmp
+omu_c04p05_speaker02.bmp
+omu_c04p05_speaker03.bmp
