@@ -1,0 +1,44 @@
+# Windows
+[Tt]humbs.db
+[Tt]humbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Environment / Secrets
+.env
+.env.local
+.env.*.local
+
+# Build / Cache
+dist/
+build/
+.cache/
+.tmp/
+temp/
+
+# Misc
+*.tmp
+*.temp
+*.bak
+
+# Project Nomads
+original-src/*
