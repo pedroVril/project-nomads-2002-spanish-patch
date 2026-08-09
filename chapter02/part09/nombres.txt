@@ -1,8 +1,0 @@
-﻿omu_c02p09_basaltface01.bmp
-omu_c02p09_basaltface02.bmp
-omu_c02p09_basaltface03.bmp
-omu_c02p09_basaltface04.bmp
-omu_c02p09_basaltface05.bmp
-omu_c02p09_basaltface06.bmp
-omu_c02p09_speaker01.bmp
-omu_c02p09_speaker02.bmp

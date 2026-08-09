@@ -1,5 +1,0 @@
-﻿omu_c01p01_speaker01.bmp
-omu_c01p01_speaker02.bmp
-omu_c01p01_speaker03.bmp
-omu_c01p01_speaker04.bmp
-omu_c01p01_speaker05.bmp

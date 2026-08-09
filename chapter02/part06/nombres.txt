@@ -1,7 +1,0 @@
-﻿omu_c02p06_krieger01.bmp
-omu_c02p06_krieger02.bmp
-omu_c02p06_seraphim01.bmp
-omu_c02p06_seraphim02.bmp
-omu_c02p06_seraphim03.bmp
-omu_c02p06_seraphim04.bmp
-omu_c02p06_seraphim05.bmp
