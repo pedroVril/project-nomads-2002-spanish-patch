@@ -27,29 +27,29 @@ from PIL import Image, ImageDraw, ImageFont
 
 # ===== Rutas =====
 SCRIPT_DIR = Path(__file__).resolve().parent  # carpeta donde vive este script
-I18N_ROOT = SCRIPT_DIR / "i18n"               # textos de entrada
-IMG_ROOT = SCRIPT_DIR / "img_locale"          # imagenes de salida
+I18N_ROOT = SCRIPT_DIR / "i18n"  # textos de entrada
+IMG_ROOT = SCRIPT_DIR / "img_locale"  # imagenes de salida
 
 # ===== Configuracion de estilo =====
-BG_COLOR = (0, 0, 0)            # Negro
-TEXT_COLOR = (255, 255, 255)    # Blanco
-FONT_SIZE = 16                  # Tamano de letra (px)
-MAX_LINES = 2                   # Maximo de lineas de texto
-MIN_FONT_SIZE = 11              # Si aun asi no cabe, se reduce la fuente hasta este minimo
-LINE_SPACING = 5                # Separacion entre lineas (px)
-IMG_W = 512                     # Ancho fijo de la imagen (px)
-IMG_H = 50                      # Alto fijo de la imagen (px)
-MARGIN_X = 20                   # Margen horizontal (texto no debe superar IMG_W - 2*MARGIN_X)
+BG_COLOR = (0, 0, 0)  # Negro
+TEXT_COLOR = (255, 255, 255)  # Blanco
+FONT_SIZE = 16  # Tamano de letra (px)
+MAX_LINES = 2  # Maximo de lineas de texto
+MIN_FONT_SIZE = 11  # Si aun asi no cabe, se reduce la fuente hasta este minimo
+LINE_SPACING = 5  # Separacion entre lineas (px)
+IMG_W = 512  # Ancho fijo de la imagen (px)
+IMG_H = 50  # Alto fijo de la imagen (px)
+MARGIN_X = 20  # Margen horizontal (texto no debe superar IMG_W - 2*MARGIN_X)
 
 # El texto nunca podra superar este ancho, asi cabe dentro de la imagen fija
 MAX_CONTENT_W = IMG_W - 2 * MARGIN_X
 
 # Fuentes sans-serif legibles (en orden de preferencia)
 FONT_CANDIDATES = [
-    "segoeui.ttf",     # Segoe UI
-    "verdana.ttf",     # Verdana (Windows)
-    "tahoma.ttf",      # Tahoma (Windows)
-    "trebuc.ttf",      # Trebuchet MS (Windows)
+    "segoeui.ttf",  # Segoe UI
+    "verdana.ttf",  # Verdana (Windows)
+    "tahoma.ttf",  # Tahoma (Windows)
+    "trebuc.ttf",  # Trebuchet MS (Windows)
     "dejavusans.ttf",  # DejaVu Sans (Linux)
 ]
 
@@ -98,8 +98,8 @@ def balanced_two_lines(draw, words, font, max_w):
     best = None
     best_cost = None
     for i in range(len(words) - 1):
-        line1 = " ".join(words[:i + 1])
-        line2 = " ".join(words[i + 1:])
+        line1 = " ".join(words[: i + 1])
+        line2 = " ".join(words[i + 1 :])
         w1 = text_size(draw, line1, font)[0]
         w2 = text_size(draw, line2, font)[0]
         overflow = max(0, w1 - max_w) + max(0, w2 - max_w)
@@ -167,8 +167,8 @@ def create_bmp_with_text(filename, text):
 
 def render_locale_json(json_path):
     """Genera las imagenes de un locale.json en img_locale con la misma estructura."""
-    rel = json_path.relative_to(I18N_ROOT)   # ej: es/chapter01/part00/locale.json
-    out_dir = IMG_ROOT / rel.parent          # ej: img_locale/es/chapter01/part00
+    rel = json_path.relative_to(I18N_ROOT)  # ej: es/chapter01/part00/locale.json
+    out_dir = IMG_ROOT / rel.parent  # ej: img_locale/es/chapter01/part00
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # utf-8-sig por si el JSON trae BOM
