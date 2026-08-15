@@ -36,19 +36,44 @@ src/i18n/es/chapter01/part00/locale.json
 
 ## Requisitos
 
-- Python 3.x
-- Pillow
+- Python 3.10 o superior
 
-```
-pip install pillow
-```
+## Puesta en marcha (una sola vez)
+
+El proyecto usa un **entorno virtual** para aislar las dependencias y no depender de lo que tenga instalado tu sistema.
+
+1. Crea el entorno virtual:
+
+   ```
+   python -m venv .venv
+   ```
+
+2. Actívalo:
+
+   - **PowerShell**: `.\.venv\Scripts\Activate.ps1`
+   - **CMD**: `.\.venv\Scripts\activate.bat`
+   - **Linux/macOS**: `source .venv/bin/activate`
+
+3. Instala las dependencias declaradas en `pyproject.toml`:
+
+   ```
+   pip install -e ".[dev]"
+   ```
+
+   - `.[dev]` instala `pillow` (dependencia de ejecución) y `ruff` (dependencia de desarrollo).
 
 ## Cómo ejecutar
 
-Desde la carpeta `src`:
+Con el entorno virtual activado:
 
 ```
-python imageGenerator.py
+image-generator
+```
+
+O bien, sin activarlo, apuntando al Python del entorno (desde la carpeta `src`):
+
+```
+..\.venv\Scripts\python.exe imageGenerator.py
 ```
 
 Las imágenes generadas quedan en `src/img_locale/`.
