@@ -127,45 +127,73 @@ def wrap_text(draw, text, font, max_w, max_lines=2):
     return lines
 
 
-def compute_layout(text):
+def compute_layout(text, draw):
     """Ajusta el tamano de fuente hasta que el texto quepa en MAX_LINES lineas."""
     size = FONT_SIZE
     lines, font = [], ImageFont.load_default()
+
     while size >= MIN_FONT_SIZE:
         font = load_font(size)
-        dummy = Image.new("RGB", (1, 1))
-        draw = ImageDraw.Draw(dummy)
-        lines = wrap_text(draw, text, font, MAX_CONTENT_W, MAX_LINES)
-        if all(text_size(draw, line, font)[0] <= MAX_CONTENT_W for line in lines):
+
+        lines = wrap_text(
+            draw,
+            text,
+            font,
+            MAX_CONTENT_W,
+            MAX_LINES,
+        )
+
+        if all(
+            text_size(draw, line, font)[0] <= MAX_CONTENT_W
+            for line in lines
+        ):
             return lines, font
+
         size -= 1
+
     return lines, font
 
 
-def create_bmp_with_text(filename, text):
-    lines, font = compute_layout(text)
+def create_bmp_with_text(filename, text, measure_draw):
+    lines, font = compute_layout(text, measure_draw)
 
-    dummy = Image.new("RGB", (1, 1))
-    draw = ImageDraw.Draw(dummy)
-    boxes = [ink_bbox(draw, line, font) for line in lines]
-    line_inks = [b[3] - b[1] for b in boxes]
+    boxes = [
+        ink_bbox(measure_draw, line, font)
+        for line in lines
+    ]
+
+    line_inks = [
+        b[3] - b[1]
+        for b in boxes
+    ]
 
     img = Image.new("RGB", (IMG_W, IMG_H), color=BG_COLOR)
     draw = ImageDraw.Draw(img)
 
     total_h = sum(line_inks) + LINE_SPACING * (len(lines) - 1)
     y = (IMG_H - total_h) / 2
+
     for line, (l, t, r, b) in zip(lines, boxes):
         baseline = y - t
         x = (IMG_W - (r - l)) / 2 - l
-        draw.text((x, baseline), line, fill=TEXT_COLOR, font=font, anchor="ls")
+
+        draw.text(
+            (x, baseline),
+            line,
+            fill=TEXT_COLOR,
+            font=font,
+            anchor="ls",
+        )
+
         y += (b - t) + LINE_SPACING
 
     img.save(filename)
+    img.close()
+
     print(f"Creado: {filename}  [{IMG_W}x{IMG_H}]")
 
 
-def render_locale_json(json_path):
+def render_locale_json(json_path, measure_draw):
     """Genera las imagenes de un locale.json en img_locale con la misma estructura."""
     rel = json_path.relative_to(I18N_ROOT)  # ej: es/chapter01/part00/locale.json
     out_dir = IMG_ROOT / rel.parent  # ej: img_locale/es/chapter01/part00
@@ -177,17 +205,31 @@ def render_locale_json(json_path):
 
     for name, text in translations.items():
         if isinstance(text, str):
-            create_bmp_with_text(out_dir / name, text)
+            create_bmp_with_text(
+                out_dir / name,
+                text,
+                measure_draw,
+            )
 
 
 def main():
     json_files = sorted(I18N_ROOT.rglob("*.json"))
+
     if not json_files:
         print(f"No se encontraron archivos locale.json en: {I18N_ROOT}")
         return 1
 
-    for json_path in json_files:
-        render_locale_json(json_path)
+    # Imagen auxiliar utilizada exclusivamente para medir texto.
+    # Se crea una sola vez y su ImageDraw se reutiliza durante todo el proceso.
+    measure_image = Image.new("RGB", (1, 1))
+    measure_draw = ImageDraw.Draw(measure_image)
+
+    try:
+        for json_path in json_files:
+            render_locale_json(json_path, measure_draw)
+    finally:
+        # Liberamos el recurso auxiliar al finalizar todo el procesamiento.
+        measure_image.close()
 
     print(f"\n¡Proceso completado! Se generaron las imagenes en {IMG_ROOT}")
     return 0
