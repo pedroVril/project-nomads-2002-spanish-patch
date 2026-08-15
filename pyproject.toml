@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-nomads-spanish-patch"
+version = "1.0.0"
+description = "Parche de traduccion al espanol de Project Nomads (2002) con generador de imagenes BMP."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pillow",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+]
+
+[project.scripts]
+image-generator = "imageGenerator:main"
+
+[tool.setuptools]
+py-modules = ["imageGenerator"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # errores de estilo (pycodestyle)
+    "F",   # errores de codigo (pyflakes)
+    "I",   # orden de imports (isort)
+    "UP",  # actualizaciones a sintaxis moderna
+    "B",   # errores comunes (bugbear)
+]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
