@@ -70,7 +70,6 @@ CONFIG = Config()
 
 
 # ===== Cache de fuentes =====
-
 # Cada tamano de fuente se carga una sola vez.
 FONT_CACHE = {}
 
@@ -108,7 +107,6 @@ def text_size(draw, text, font):
 
 
 # ===== Procesamiento de texto =====
-
 def greedy_wrap(draw, paragraph, font, max_w):
     """Parte un parrafo en lineas que quepan en max_w, palabra a palabra."""
     words = paragraph.split()
@@ -264,8 +262,6 @@ def create_bmp_with_text(filename, text, measure_draw):
 
 
 # ===== Lectura de archivos =====
-
-
 def load_locale_json(json_path):
     """Lee un archivo locale.json y devuelve sus traducciones."""
     with open(json_path, "r", encoding="utf-8-sig") as fh:
