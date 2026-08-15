@@ -21,6 +21,7 @@ misma estructura en `i18n` y volver a ejecutar el script.
 """
 
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -264,6 +265,8 @@ def render_translations(translations, out_dir, measure_draw):
     """Genera las imagenes BMP correspondientes a las traducciones."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    image_count = 0
+
     for name, text in translations.items():
         if isinstance(text, str):
             create_bmp_with_text(
@@ -271,6 +274,9 @@ def render_translations(translations, out_dir, measure_draw):
                 text,
                 measure_draw,
             )
+            image_count += 1
+
+    return image_count
 
 
 def process_locale_file(json_path, measure_draw):
@@ -278,7 +284,7 @@ def process_locale_file(json_path, measure_draw):
     translations = load_locale_json(json_path)
     out_dir = get_output_directory(json_path)
 
-    render_translations(
+    return render_translations(
         translations,
         out_dir,
         measure_draw,
@@ -286,6 +292,8 @@ def process_locale_file(json_path, measure_draw):
 
 
 def main():
+    start_time = time.perf_counter()
+
     json_files = sorted(I18N_ROOT.rglob("*.json"))
 
     if not json_files:
@@ -297,9 +305,11 @@ def main():
     measure_image = Image.new("RGB", (1, 1))
     measure_draw = ImageDraw.Draw(measure_image)
 
+    image_count = 0
+
     try:
         for json_path in json_files:
-            process_locale_file(
+            image_count += process_locale_file(
                 json_path,
                 measure_draw,
             )
@@ -307,7 +317,13 @@ def main():
         # Liberamos el recurso auxiliar al finalizar todo el procesamiento.
         measure_image.close()
 
-    print(f"\n¡Proceso completado! Se generaron las imagenes en {IMG_ROOT}")
+    elapsed_time = time.perf_counter() - start_time
+
+    print("\n¡Proceso completado!")
+    print(f"Imagenes creadas: {image_count}")
+    print(f"Tiempo total: {elapsed_time:.2f} segundos")
+    print(f"Imagenes generadas en: {IMG_ROOT}")
+
     return 0
 
 
