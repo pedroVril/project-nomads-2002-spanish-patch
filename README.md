@@ -1,6 +1,8 @@
 # Traducción al español del juego Project Nomads
 
-![Project Nomads](documentation_img/project-nomands.jpg)
+<div align="center">
+  <img src="documentation_img/project-nomands.jpg" alt="Project Nomads">
+</div>
 
 ## Descripción
 
