@@ -95,7 +95,7 @@ def load_font(size):
 
 
 def ink_bbox(draw, text, font):
-    """Bbox de la tinta real, relativo a la linea base (anchor 'ls'): top<0, bottom>0."""
+    """Bbox de la tinta real, relativo a la linea base (anchor 'ls')."""
     return draw.textbbox((0, 0), text, font=font, anchor="ls")
 
 
@@ -248,15 +248,15 @@ def create_bmp_with_text(filename, text, measure_draw):
     print(f"Creado: {filename}  [{CONFIG.img_w}x{CONFIG.img_h}]")
 
 
-def render_locale_json(json_path, measure_draw):
-    """Genera las imagenes de un locale.json en img_locale con la misma estructura."""
-    rel = json_path.relative_to(I18N_ROOT)
-    out_dir = IMG_ROOT / rel.parent
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    # utf-8-sig por si el JSON trae BOM
+def load_locale_json(json_path):
+    """Lee un archivo locale.json y devuelve sus traducciones."""
     with open(json_path, "r", encoding="utf-8-sig") as fh:
-        translations = json.load(fh)
+        return json.load(fh)
+
+
+def render_translations(translations, out_dir, measure_draw):
+    """Genera las imagenes BMP correspondientes a las traducciones."""
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     for name, text in translations.items():
         if isinstance(text, str):
@@ -281,7 +281,16 @@ def main():
 
     try:
         for json_path in json_files:
-            render_locale_json(json_path, measure_draw)
+            rel = json_path.relative_to(I18N_ROOT)
+            out_dir = IMG_ROOT / rel.parent
+
+            translations = load_locale_json(json_path)
+
+            render_translations(
+                translations,
+                out_dir,
+                measure_draw,
+            )
     finally:
         # Liberamos el recurso auxiliar al finalizar todo el procesamiento.
         measure_image.close()
