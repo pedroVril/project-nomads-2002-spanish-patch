@@ -10,10 +10,12 @@ cada dialogo dentro de `img_locale`, respetando la misma estructura de carpetas:
 
 COMO EJECUTARLO
 ---------------
-1) Requisitos: Python 3.x y la libreria Pillow:
-       pip install pillow
-2) Desde la carpeta `src`:
-       python imageGenerator.py
+1) Crea el entorno virtual e instala las dependencias (ver README.md):
+       python -m venv .venv
+       .\.venv\Scripts\Activate.ps1
+       pip install -e ".[dev]"
+2) Ejecutalo con el entorno activado:
+       image-generator
 3) Las imagenes quedan en `src/img_locale/...`.
 
 Para anadir mas capitulos o partes, basta con crear los locale.json con la
@@ -222,9 +224,9 @@ def render_text_image(lines, font, measure_draw):
 
     y = (CONFIG.img_h - total_h) / 2
 
-    for line, (l, t, r, b) in zip(lines, boxes):
-        baseline = y - t
-        x = (CONFIG.img_w - (r - l)) / 2 - l
+    for line, (left, top, right, bottom) in zip(lines, boxes, strict=True):
+        baseline = y - top
+        x = (CONFIG.img_w - (right - left)) / 2 - left
 
         draw.text(
             (x, baseline),
@@ -234,7 +236,7 @@ def render_text_image(lines, font, measure_draw):
             anchor="ls",
         )
 
-        y += (b - t) + CONFIG.line_spacing
+        y += (bottom - top) + CONFIG.line_spacing
 
     return img
 
@@ -264,7 +266,7 @@ def create_bmp_with_text(filename, text, measure_draw):
 # ===== Lectura de archivos =====
 def load_locale_json(json_path):
     """Lee un archivo locale.json y devuelve sus traducciones."""
-    with open(json_path, "r", encoding="utf-8-sig") as fh:
+    with open(json_path, encoding="utf-8-sig") as fh:
         return json.load(fh)
 
 
@@ -277,6 +279,7 @@ def get_output_directory(json_path):
 def find_locale_files():
     """Busca todos los archivos JSON de traducciones."""
     return sorted(I18N_ROOT.rglob("*.json"))
+
 
 # ===== Procesamiento de traducciones =====
 def render_translations(translations, out_dir, measure_draw):
