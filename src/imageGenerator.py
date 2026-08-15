@@ -53,7 +53,6 @@ FONT_CANDIDATES = [
     "dejavusans.ttf",  # DejaVu Sans (Linux)
 ]
 
-
 # Cache de fuentes.
 # Cada combinacion de fuente y tamano se carga una sola vez.
 FONT_CACHE = {}
@@ -95,17 +94,22 @@ def greedy_wrap(draw, paragraph, font, max_w):
     words = paragraph.split()
     if not words:
         return [""]
+
     if text_size(draw, paragraph, font)[0] <= max_w:
         return [paragraph]
+
     lines = []
     current = words[0]
+
     for word in words[1:]:
         candidate = current + " " + word
+
         if text_size(draw, candidate, font)[0] <= max_w:
             current = candidate
         else:
             lines.append(current)
             current = word
+
     lines.append(current)
     return lines
 
@@ -114,33 +118,41 @@ def balanced_two_lines(draw, words, font, max_w):
     """Reparte las palabras en exactamente 2 lineas lo mas equilibradas posible."""
     best = None
     best_cost = None
+
     for i in range(len(words) - 1):
         line1 = " ".join(words[: i + 1])
         line2 = " ".join(words[i + 1 :])
+
         w1 = text_size(draw, line1, font)[0]
         w2 = text_size(draw, line2, font)[0]
+
         overflow = max(0, w1 - max_w) + max(0, w2 - max_w)
         cost = overflow * 100000 + abs(w1 - w2)
+
         if best_cost is None or cost < best_cost:
             best = [line1, line2]
             best_cost = cost
+
     return best
 
 
 def wrap_text(draw, text, font, max_w, max_lines=2):
     """Devuelve la lista de lineas: 1 linea si cabe, 2 lineas centradas si no."""
     flat = text.replace("\n", " ")
+
     if text_size(draw, flat, font)[0] <= max_w:
         return [flat]
 
     # Respetar saltos \n manuales cuando sea posible
     lines = []
+
     for para in text.split("\n"):
         lines.extend(greedy_wrap(draw, para, font, max_w))
 
     # Si son demasiadas lineas, reorganizar en exactamente max_lines equilibradas
     if len(lines) > max_lines:
         lines = balanced_two_lines(draw, text.split(), font, max_w)
+
     return lines
 
 
@@ -160,10 +172,7 @@ def compute_layout(text, draw):
             MAX_LINES,
         )
 
-        if all(
-            text_size(draw, line, font)[0] <= MAX_CONTENT_W
-            for line in lines
-        ):
+        if all(text_size(draw, line, font)[0] <= MAX_CONTENT_W for line in lines):
             return lines, font
 
         size -= 1
@@ -171,18 +180,11 @@ def compute_layout(text, draw):
     return lines, font
 
 
-def create_bmp_with_text(filename, text, measure_draw):
-    lines, font = compute_layout(text, measure_draw)
+def render_text_image(lines, font, measure_draw):
+    """Crea una imagen y dibuja en ella las lineas con la fuente indicada."""
+    boxes = [ink_bbox(measure_draw, line, font) for line in lines]
 
-    boxes = [
-        ink_bbox(measure_draw, line, font)
-        for line in lines
-    ]
-
-    line_inks = [
-        b[3] - b[1]
-        for b in boxes
-    ]
+    line_inks = [b[3] - b[1] for b in boxes]
 
     img = Image.new("RGB", (IMG_W, IMG_H), color=BG_COLOR)
     draw = ImageDraw.Draw(img)
@@ -203,6 +205,19 @@ def create_bmp_with_text(filename, text, measure_draw):
         )
 
         y += (b - t) + LINE_SPACING
+
+    return img
+
+
+def create_bmp_with_text(filename, text, measure_draw):
+    """Calcula el layout, renderiza el texto y guarda la imagen BMP."""
+    lines, font = compute_layout(text, measure_draw)
+
+    img = render_text_image(
+        lines,
+        font,
+        measure_draw,
+    )
 
     img.save(filename)
     img.close()
