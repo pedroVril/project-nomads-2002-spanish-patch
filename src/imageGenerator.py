@@ -70,12 +70,13 @@ CONFIG = Config()
 
 
 # ===== Cache de fuentes =====
+
 # Cada tamano de fuente se carga una sola vez.
 FONT_CACHE = {}
 
 
 def load_font(size):
-    # Si la fuente para este tamano ya fue cargada, reutilizarla.
+    """Carga una fuente y la reutiliza mediante una cache."""
     if size in FONT_CACHE:
         return FONT_CACHE[size]
 
@@ -87,26 +88,29 @@ def load_font(size):
         except OSError:
             continue
 
-    # Guardamos tambien la fuente por defecto para no volver a buscar
-    # las fuentes candidatas si este tamano se solicita nuevamente.
+    # Si no se encuentra ninguna fuente candidata, usar la fuente por defecto.
     font = ImageFont.load_default()
     FONT_CACHE[size] = font
 
     return font
 
 
+# ===== Medicion de texto =====
 def ink_bbox(draw, text, font):
     """Bbox de la tinta real, relativo a la linea base (anchor 'ls')."""
     return draw.textbbox((0, 0), text, font=font, anchor="ls")
 
 
 def text_size(draw, text, font):
+    """Devuelve el ancho y alto real que ocupa un texto."""
     bbox = ink_bbox(draw, text, font)
     return bbox[2] - bbox[0], bbox[3] - bbox[1]
 
 
+# ===== Procesamiento de texto =====
+
 def greedy_wrap(draw, paragraph, font, max_w):
-    """Parte un parrafo en lineas que quepan en max_w (palabra a palabra)."""
+    """Parte un parrafo en lineas que quepan en max_w, palabra a palabra."""
     words = paragraph.split()
 
     if not words:
@@ -154,29 +158,31 @@ def balanced_two_lines(draw, words, font, max_w):
 
 
 def wrap_text(draw, text, font, max_w, max_lines=2):
-    """Devuelve la lista de lineas: 1 linea si cabe, 2 lineas centradas si no."""
+    """Devuelve las lineas necesarias para mostrar el texto."""
     flat = text.replace("\n", " ")
 
     if text_size(draw, flat, font)[0] <= max_w:
         return [flat]
 
-    # Respetar saltos \n manuales cuando sea posible
+    # Respetar saltos de linea manuales cuando sea posible.
     lines = []
 
     for para in text.split("\n"):
         lines.extend(greedy_wrap(draw, para, font, max_w))
 
-    # Si son demasiadas lineas, reorganizar en exactamente max_lines equilibradas
+    # Si son demasiadas lineas, reorganizar en exactamente max_lines.
     if len(lines) > max_lines:
         lines = balanced_two_lines(draw, text.split(), font, max_w)
 
     return lines
 
 
+# ===== Layout =====
 def compute_layout(text, draw):
-    """Ajusta el tamano de fuente hasta que el texto quepa en MAX_LINES lineas."""
+    """Ajusta el tamano de fuente hasta que el texto quepa en MAX_LINES."""
     size = CONFIG.font_size
-    lines, font = [], ImageFont.load_default()
+    lines = []
+    font = ImageFont.load_default()
 
     while size >= CONFIG.min_font_size:
         font = load_font(size)
@@ -199,6 +205,7 @@ def compute_layout(text, draw):
     return lines, font
 
 
+# ===== Render =====
 def render_text_image(lines, font, measure_draw):
     """Crea una imagen y dibuja en ella las lineas con la fuente indicada."""
     boxes = [ink_bbox(measure_draw, line, font) for line in lines]
@@ -214,6 +221,7 @@ def render_text_image(lines, font, measure_draw):
     draw = ImageDraw.Draw(img)
 
     total_h = sum(line_inks) + CONFIG.line_spacing * (len(lines) - 1)
+
     y = (CONFIG.img_h - total_h) / 2
 
     for line, (l, t, r, b) in zip(lines, boxes):
@@ -233,6 +241,13 @@ def render_text_image(lines, font, measure_draw):
     return img
 
 
+# ===== Persistencia =====
+def save_image(img, filename):
+    """Guarda una imagen en disco y libera el recurso asociado."""
+    img.save(filename)
+    img.close()
+
+
 def create_bmp_with_text(filename, text, measure_draw):
     """Calcula el layout, renderiza el texto y guarda la imagen BMP."""
     lines, font = compute_layout(text, measure_draw)
@@ -243,10 +258,12 @@ def create_bmp_with_text(filename, text, measure_draw):
         measure_draw,
     )
 
-    img.save(filename)
-    img.close()
+    save_image(img, filename)
 
     print(f"Creado: {filename}  [{CONFIG.img_w}x{CONFIG.img_h}]")
+
+
+# ===== Lectura de archivos =====
 
 
 def load_locale_json(json_path):
@@ -261,6 +278,11 @@ def get_output_directory(json_path):
     return IMG_ROOT / relative_path.parent
 
 
+def find_locale_files():
+    """Busca todos los archivos JSON de traducciones."""
+    return sorted(I18N_ROOT.rglob("*.json"))
+
+# ===== Procesamiento de traducciones =====
 def render_translations(translations, out_dir, measure_draw):
     """Genera las imagenes BMP correspondientes a las traducciones."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -274,6 +296,7 @@ def render_translations(translations, out_dir, measure_draw):
                 text,
                 measure_draw,
             )
+
             image_count += 1
 
     return image_count
@@ -291,10 +314,11 @@ def process_locale_file(json_path, measure_draw):
     )
 
 
+# ===== Ejecucion =====
 def main():
     start_time = time.perf_counter()
 
-    json_files = sorted(I18N_ROOT.rglob("*.json"))
+    json_files = find_locale_files()
 
     if not json_files:
         print(f"No se encontraron archivos locale.json en: {I18N_ROOT}")
