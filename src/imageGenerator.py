@@ -54,13 +54,30 @@ FONT_CANDIDATES = [
 ]
 
 
+# Cache de fuentes.
+# Cada combinacion de fuente y tamano se carga una sola vez.
+FONT_CACHE = {}
+
+
 def load_font(size):
+    # Si la fuente para este tamano ya fue cargada, reutilizarla.
+    if size in FONT_CACHE:
+        return FONT_CACHE[size]
+
     for name in FONT_CANDIDATES:
         try:
-            return ImageFont.truetype(name, size)
+            font = ImageFont.truetype(name, size)
+            FONT_CACHE[size] = font
+            return font
         except OSError:
             continue
-    return ImageFont.load_default()
+
+    # Guardamos tambien la fuente por defecto para no volver a buscar
+    # las fuentes candidatas si este tamano se solicita nuevamente.
+    font = ImageFont.load_default()
+    FONT_CACHE[size] = font
+
+    return font
 
 
 def ink_bbox(draw, text, font):
