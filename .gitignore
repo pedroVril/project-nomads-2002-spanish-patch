@@ -36,9 +36,15 @@ build/
 temp/
 
 # Python
+.venv/
+venv/
 __pycache__/
 *.py[cod]
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.uv/
 
 # Misc
 *.tmp
