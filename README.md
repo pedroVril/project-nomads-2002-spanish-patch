@@ -42,41 +42,66 @@ src/i18n/es/chapter01/part00/locale.json
 
 El proyecto usa un **entorno virtual** para aislar las dependencias y no depender de lo que tenga instalado tu sistema.
 
-1. Crea el entorno virtual:
+**Importante:** para que los paquetes queden DENTRO del `.venv` y no en tu Python global, debes usar el Python del entorno virtual. Los comandos de abajo ya lo hacen, así que no es necesario "activar" nada.
+
+1. Crea el entorno virtual (desde la raíz del proyecto):
 
    ```
    python -m venv .venv
    ```
 
-2. Actívalo:
+2. Instala las dependencias declaradas en `pyproject.toml` usando el pip del entorno:
 
-   - **PowerShell**: `.\.venv\Scripts\Activate.ps1`
-   - **CMD**: `.\.venv\Scripts\activate.bat`
-   - **Linux/macOS**: `source .venv/bin/activate`
-
-3. Instala las dependencias declaradas en `pyproject.toml`:
-
-   ```
-   pip install -e ".[dev]"
-   ```
+   - **Windows / PowerShell**:
+     ```
+     .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+     ```
+   - **Windows / Git Bash (MINGW64)** — usa barras normales `/`, no `\`:
+     ```
+     .venv/Scripts/python.exe -m pip install -e ".[dev]"
+     ```
+   - **Linux/macOS**:
+     ```
+     .venv/bin/python -m pip install -e ".[dev]"
+     ```
 
    - `.[dev]` instala `pillow` (dependencia de ejecución) y `ruff` (dependencia de desarrollo).
 
+> **Alternativa (activando el entorno):** `.\.venv\Scripts\Activate.ps1` y luego `pip install -e ".[dev]"`. Pero si escribes `pip install` **sin haber activado**, se instala en tu Python global.
+
 ## Cómo ejecutar
 
-Con el entorno virtual activado:
+Sin activar nada, desde la raíz del proyecto:
+
+- **Windows / PowerShell**: `.\.venv\Scripts\python.exe src\imageGenerator.py`
+- **Windows / Git Bash (MINGW64)**: `.venv/Scripts/python.exe src/imageGenerator.py`
+- **Linux/macOS**: `.venv/bin/python src/imageGenerator.py`
+
+O con el entorno activado:
 
 ```
 image-generator
 ```
 
-O bien, sin activarlo, apuntando al Python del entorno (desde la carpeta `src`):
-
-```
-..\.venv\Scripts\python.exe imageGenerator.py
-```
-
 Las imágenes generadas quedan en `src/img_locale/`.
+
+## Solución de problemas
+
+### "WARNING: The script image-generator.exe is installed in '...pythoncore-3.14-64\Scripts'"
+
+Ese warning significa que instalaste con tu pip global (no con el del `.venv`). Solución: desinstala del entorno global y vuelve a instalar con el Python del venv:
+
+```
+python -m pip uninstall -y project-nomads-spanish-patch
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+```
+
+Verifica dónde quedó cada cosa:
+
+```
+python -m pip list                    # entorno global (solo debe salir pip)
+.\.venv\Scripts\python.exe -m pip list   # entorno virtual (pillow, ruff, el proyecto)
+```
 
 ## Cómo traducir
 

@@ -12,8 +12,8 @@ COMO EJECUTARLO
 ---------------
 1) Crea el entorno virtual e instala las dependencias (ver README.md):
        python -m venv .venv
-       .\.venv\Scripts\Activate.ps1
-       pip install -e ".[dev]"
+       ./.venv/Scripts/Activate.ps1
+       pip install -e ".[dev]" # Instala las dependencias de desarrollo (incluye Pillow de manera global. Para instalar en el entorno virtual leer READNE.md)
 2) Ejecutalo con el entorno activado:
        image-generator
 3) Las imagenes quedan en `src/img_locale/...`.
