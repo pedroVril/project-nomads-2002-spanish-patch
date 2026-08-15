@@ -254,6 +254,12 @@ def load_locale_json(json_path):
         return json.load(fh)
 
 
+def get_output_directory(json_path):
+    """Obtiene la carpeta de salida correspondiente a un archivo JSON."""
+    relative_path = json_path.relative_to(I18N_ROOT)
+    return IMG_ROOT / relative_path.parent
+
+
 def render_translations(translations, out_dir, measure_draw):
     """Genera las imagenes BMP correspondientes a las traducciones."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -265,6 +271,18 @@ def render_translations(translations, out_dir, measure_draw):
                 text,
                 measure_draw,
             )
+
+
+def process_locale_file(json_path, measure_draw):
+    """Procesa un locale.json y genera sus imagenes correspondientes."""
+    translations = load_locale_json(json_path)
+    out_dir = get_output_directory(json_path)
+
+    render_translations(
+        translations,
+        out_dir,
+        measure_draw,
+    )
 
 
 def main():
@@ -281,14 +299,8 @@ def main():
 
     try:
         for json_path in json_files:
-            rel = json_path.relative_to(I18N_ROOT)
-            out_dir = IMG_ROOT / rel.parent
-
-            translations = load_locale_json(json_path)
-
-            render_translations(
-                translations,
-                out_dir,
+            process_locale_file(
+                json_path,
                 measure_draw,
             )
     finally:
