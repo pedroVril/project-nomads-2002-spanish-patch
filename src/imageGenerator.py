@@ -21,40 +21,55 @@ misma estructura en `i18n` y volver a ejecutar el script.
 """
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 # ===== Rutas =====
-SCRIPT_DIR = Path(__file__).resolve().parent  # carpeta donde vive este script
-I18N_ROOT = SCRIPT_DIR / "i18n"  # textos de entrada
-IMG_ROOT = SCRIPT_DIR / "img_locale"  # imagenes de salida
+SCRIPT_DIR = Path(__file__).resolve().parent
+I18N_ROOT = SCRIPT_DIR / "i18n"
+IMG_ROOT = SCRIPT_DIR / "img_locale"
 
-# ===== Configuracion de estilo =====
-BG_COLOR = (0, 0, 0)  # Negro
-TEXT_COLOR = (255, 255, 255)  # Blanco
-FONT_SIZE = 16  # Tamano de letra (px)
-MAX_LINES = 2  # Maximo de lineas de texto
-MIN_FONT_SIZE = 11  # Si aun asi no cabe, se reduce la fuente hasta este minimo
-LINE_SPACING = 5  # Separacion entre lineas (px)
-IMG_W = 512  # Ancho fijo de la imagen (px)
-IMG_H = 50  # Alto fijo de la imagen (px)
-MARGIN_X = 20  # Margen horizontal (texto no debe superar IMG_W - 2*MARGIN_X)
 
-# El texto nunca podra superar este ancho, asi cabe dentro de la imagen fija
-MAX_CONTENT_W = IMG_W - 2 * MARGIN_X
+# ===== Configuracion =====
+@dataclass(frozen=True)
+class Config:
+    # Colores
+    bg_color: tuple = (0, 0, 0)
+    text_color: tuple = (255, 255, 255)
 
-# Fuentes sans-serif legibles (en orden de preferencia)
-FONT_CANDIDATES = [
-    "segoeui.ttf",  # Segoe UI
-    "verdana.ttf",  # Verdana (Windows)
-    "tahoma.ttf",  # Tahoma (Windows)
-    "trebuc.ttf",  # Trebuchet MS (Windows)
-    "dejavusans.ttf",  # DejaVu Sans (Linux)
-]
+    # Texto
+    font_size: int = 16
+    min_font_size: int = 11
+    max_lines: int = 2
+    line_spacing: int = 5
 
-# Cache de fuentes.
-# Cada combinacion de fuente y tamano se carga una sola vez.
+    # Imagen
+    img_w: int = 512
+    img_h: int = 50
+    margin_x: int = 20
+
+    # Fuentes sans-serif legibles (en orden de preferencia)
+    font_candidates: tuple = (
+        "segoeui.ttf",
+        "verdana.ttf",
+        "tahoma.ttf",
+        "trebuc.ttf",
+        "dejavusans.ttf",
+    )
+
+    @property
+    def max_content_w(self):
+        """Ancho maximo disponible para el texto."""
+        return self.img_w - 2 * self.margin_x
+
+
+CONFIG = Config()
+
+
+# ===== Cache de fuentes =====
+# Cada tamano de fuente se carga una sola vez.
 FONT_CACHE = {}
 
 
@@ -63,7 +78,7 @@ def load_font(size):
     if size in FONT_CACHE:
         return FONT_CACHE[size]
 
-    for name in FONT_CANDIDATES:
+    for name in CONFIG.font_candidates:
         try:
             font = ImageFont.truetype(name, size)
             FONT_CACHE[size] = font
@@ -92,6 +107,7 @@ def text_size(draw, text, font):
 def greedy_wrap(draw, paragraph, font, max_w):
     """Parte un parrafo en lineas que quepan en max_w (palabra a palabra)."""
     words = paragraph.split()
+
     if not words:
         return [""]
 
@@ -158,21 +174,23 @@ def wrap_text(draw, text, font, max_w, max_lines=2):
 
 def compute_layout(text, draw):
     """Ajusta el tamano de fuente hasta que el texto quepa en MAX_LINES lineas."""
-    size = FONT_SIZE
+    size = CONFIG.font_size
     lines, font = [], ImageFont.load_default()
 
-    while size >= MIN_FONT_SIZE:
+    while size >= CONFIG.min_font_size:
         font = load_font(size)
 
         lines = wrap_text(
             draw,
             text,
             font,
-            MAX_CONTENT_W,
-            MAX_LINES,
+            CONFIG.max_content_w,
+            CONFIG.max_lines,
         )
 
-        if all(text_size(draw, line, font)[0] <= MAX_CONTENT_W for line in lines):
+        if all(
+            text_size(draw, line, font)[0] <= CONFIG.max_content_w for line in lines
+        ):
             return lines, font
 
         size -= 1
@@ -186,25 +204,30 @@ def render_text_image(lines, font, measure_draw):
 
     line_inks = [b[3] - b[1] for b in boxes]
 
-    img = Image.new("RGB", (IMG_W, IMG_H), color=BG_COLOR)
+    img = Image.new(
+        "RGB",
+        (CONFIG.img_w, CONFIG.img_h),
+        color=CONFIG.bg_color,
+    )
+
     draw = ImageDraw.Draw(img)
 
-    total_h = sum(line_inks) + LINE_SPACING * (len(lines) - 1)
-    y = (IMG_H - total_h) / 2
+    total_h = sum(line_inks) + CONFIG.line_spacing * (len(lines) - 1)
+    y = (CONFIG.img_h - total_h) / 2
 
     for line, (l, t, r, b) in zip(lines, boxes):
         baseline = y - t
-        x = (IMG_W - (r - l)) / 2 - l
+        x = (CONFIG.img_w - (r - l)) / 2 - l
 
         draw.text(
             (x, baseline),
             line,
-            fill=TEXT_COLOR,
+            fill=CONFIG.text_color,
             font=font,
             anchor="ls",
         )
 
-        y += (b - t) + LINE_SPACING
+        y += (b - t) + CONFIG.line_spacing
 
     return img
 
@@ -222,13 +245,13 @@ def create_bmp_with_text(filename, text, measure_draw):
     img.save(filename)
     img.close()
 
-    print(f"Creado: {filename}  [{IMG_W}x{IMG_H}]")
+    print(f"Creado: {filename}  [{CONFIG.img_w}x{CONFIG.img_h}]")
 
 
 def render_locale_json(json_path, measure_draw):
     """Genera las imagenes de un locale.json en img_locale con la misma estructura."""
-    rel = json_path.relative_to(I18N_ROOT)  # ej: es/chapter01/part00/locale.json
-    out_dir = IMG_ROOT / rel.parent  # ej: img_locale/es/chapter01/part00
+    rel = json_path.relative_to(I18N_ROOT)
+    out_dir = IMG_ROOT / rel.parent
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # utf-8-sig por si el JSON trae BOM
